@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>練習</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Lora:ital,wght@0,400;0,300;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="screen" id="main">
+  <nav>
+    <div class="nav-logo">練習</div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showPanel('sets',this)">Sets</button>
+      <button class="nav-link" onclick="showPanel('practice',this)">Practice</button>
+      <button class="nav-link" onclick="showPanel('settings',this)">Settings</button>
+    </div>
+  </nav>
+
+  <!-- SETS -->
+  <div class="panel active" id="panel-sets">
+    <div class="sets-header">
+      <div class="panel-label">Your sets</div>
+      <button class="ghost-btn" onclick="openModal()">+ Create</button>
+    </div>
+    <div class="sets-list" id="sets-list"></div>
+  </div>
+
+  <!-- PRACTICE -->
+  <div class="panel" id="panel-practice">
+    <div class="practice-form">
+
+      <div class="form-row">
+        <div class="form-row-label">Set</div>
+        <select class="form-select" id="prac-set">
+          <option value="">Select a set</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-row-label">Direction</div>
+        <div class="dir-picker">
+          <select class="form-select dir-select" id="dir-from">
+            <option value="zh">Chinese</option>
+            <option value="py">Pinyin</option>
+            <option value="en">English</option>
+          </select>
+          <span class="dir-arrow">→</span>
+          <select class="form-select dir-select" id="dir-to">
+            <option value="en">English</option>
+            <option value="py">Pinyin</option>
+            <option value="zh">Chinese</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-row-label">Chinese support</div>
+        <div class="toggle-row">
+          <button class="toggle-opt active" onclick="setSupport('site',this)">Site</button>
+          <button class="toggle-opt" onclick="setSupport('me',this)">Me</button>
+        </div>
+        <div class="support-desc" id="support-desc">
+          Site converts your typing to Chinese — type pinyin and pick from candidates.
+        </div>
+      </div>
+
+      <button class="begin-btn" onclick="beginPractice()">Begin</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <div class="settings-row">
+      <div class="settings-row-label">Theme</div>
+      <div class="theme-switch">
+        <button class="theme-opt active" onclick="setTheme('dark',this)">Dark</button>
+        <button class="theme-opt" onclick="setTheme('light',this)">Light</button>
+      </div>
+    </div>
+
+    <div class="settings-bottom">
+      <div id="auth-status" class="auth-status"></div>
+      <button class="sign-in-btn" id="sign-in-btn" onclick="openAuthModal()">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PRACTICE SCREEN ══════════════ -->
+<div class="screen hidden" id="practice-screen">
+  <button class="p-exit" onclick="exitPractice()">← exit</button>
+
+  <div class="p-word">
+    <div class="p-prompt" id="p-prompt"></div>
+    <div class="p-hint" id="p-hint"></div>
+  </div>
+
+  <div class="p-divider"></div>
+
+  <div class="answer-zone" id="answer-zone">
+    <canvas id="answer-canvas"></canvas>
+    <div class="typed-display">
+      <div class="typed-chars" id="typed-chars"></div>
+    </div>
+  </div>
+
+  <div class="candidates-bar" id="cand-bar"></div>
+
+  <div class="p-bar">
+    <button class="p-btn" onclick="clearAnswer()">clear</button>
+    <button class="p-btn primary" onclick="nextCard()">next →</button>
+  </div>
+</div>
+
+<!-- ══════════════ SET MODAL ══════════════ -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Create set</div>
+    <input class="modal-input" id="modal-name" type="text" placeholder="Set name">
+    <div class="word-col-labels">
+      <div class="word-col-label">Chinese</div>
+      <div class="word-col-label">Pinyin</div>
+      <div class="word-col-label">English</div>
+      <div></div>
+    </div>
+    <div id="word-rows"></div>
+    <button class="add-word-btn" onclick="addRow()">+ add word</button>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveSet()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ AUTH MODAL ══════════════ -->
+<div class="modal-overlay" id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="modal">
+    <div class="modal-title" id="auth-modal-title">Sign in</div>
+
+    <div id="auth-error" class="auth-error"></div>
+
+    <input class="modal-input" id="auth-username" type="text" placeholder="Username" autocomplete="username">
+    <input class="modal-input" id="auth-password" type="password" placeholder="Password" autocomplete="current-password">
+
+    <div class="modal-actions" style="justify-content:space-between;align-items:center">
+      <button class="modal-cancel" onclick="toggleAuthMode()">
+        <span id="auth-toggle-label">Need an account? Register</span>
+      </button>
+      <div style="display:flex;gap:24px;align-items:center">
+        <button class="modal-cancel" onclick="closeAuthModal()">Cancel</button>
+        <button class="modal-save" id="auth-submit-btn" onclick="submitAuth()">Sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
